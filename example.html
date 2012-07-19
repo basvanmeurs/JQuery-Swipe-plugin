@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="nl">
+	<head>
+		<meta charset="utf-8">
+		<title>Swipe demo</title>
+		<meta name="description" content="Swipe demo">
+		<meta name="author" content="Cipix Internet">
+		<style>
+			#slideshow {
+				width: 552px;
+				height: 384px;
+				position: relative;
+				overflow: hidden;
+			}
+
+			#slideshow .container {
+				position: absolute;
+				left: 0;
+				width: 100000px;
+			}
+			
+			#slideshow .item {
+				float: left;
+				display: block;
+			}
+		</style>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+		<script src="jquery.swipe.js"></script>
+	</head>
+	<body>
+		<article id="slideshow">
+			<div class="container">
+				<article class="item">
+					<div style="width:512px;height:384px;background-color:#ff0000" />
+				</article>
+				<article class="item">
+					<div style="width:512px;height:384px;background-color:#00ff00" />
+				</article>
+				<article class="item">
+					<div style="width:512px;height:384px;background-color:#0000ff" />
+				</article>
+				<article class="item">
+					<div style="width:512px;height:384px;background-color:#ff00ff" />
+				</article>
+			</div>
+		</article>
+		<script>
+    // Init slideshow.
+    var slideshow = $('#slideshow').swipe({
+      container: $('#slideshow .container'),
+      debug: false, /* Set to true to listen to mouse events instead of touch events */
+      swipeThreshold: 0,
+    });
+
+    // Listen to swipe events.
+    $('#slideshow').bind('changeitem', function(slideshow, item, currentItemIndex) {
+      // Reset timer.
+      clearTimeout(timer);
+      timer = setTimeout(autoScroll, 5000);
+    });
+    
+    // Auto scroll.
+    var timer = null;
+    var autoScroll = function() {
+      slideshow.move(1, true);
+    }
+    
+    // Start initial auto scroll.
+    timer = setTimeout(autoScroll, 5000);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,10 @@
+Copyright (c) 2012 Cipix Internet
+Dual licensed under the MIT and GPL licenses.
+http://jquery.malsup.com/license.html
+ 
+I lately needed to create a slideshow that is swipable on tablets.
+Therefore I created a jQuery plugin which detects touch events on a div, and scrolls a container with 'items' (the child elements) according to the swipe. The user can swipe through all of the items.
+This jQuery plugin can be used to create a swipable slideshow. This package contains an example of a working slideshow.
+You can get the jquery plugin from the example. The code is fairly simple, and documented, so an API is not necessary.
+In this example, the slideshow normally runs every 5 seconds, but is also swipable (if the touch events are supported).
+Because vertical scrolling on the iPad causes the horizontal swipe scrolling to be delayed, I had to prevent the default event while moving the finger on the touchpad, and use jQuery scrollTop to scroll manually. As far as I can see it doesn't lead to undesired side-effects.
