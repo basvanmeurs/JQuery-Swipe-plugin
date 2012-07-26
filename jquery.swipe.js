@@ -20,8 +20,8 @@
  *   - itemIndex
  *     (New) item index.
  *     
- * - changeitem
- *   This event is triggered when the 'current' item is changed.
+ * - moveitem
+ *   This event is triggered when a move to another item is started.
  *   Parameters: 
  *   - slideshow
  *     The slideshow object.
@@ -29,7 +29,17 @@
  *     The item.
  *   - itemIndex
  *     (New) item index.
- * 
+ *
+ * - changeitem
+ *   This event is triggered when the moving has completed.
+ *   Parameters: 
+ *   - slideshow
+ *     The slideshow object.
+ *   - item
+ *     The item.
+ *   - itemIndex
+ *     (New) item index.
+ *     
  * @param options
  *   This is an object containing the following options:
  *   - minspeed
@@ -47,11 +57,11 @@
  *     While moving, the difference between the current position and the target position is multiplied with this number and then substracted.
  */
 jQuery.fn.swipe = function (options) {
-	// Support multiple elements.
-	if (this.length > 1){
+  // Support multiple elements.
+  if (this.length > 1){
     this.each(function() { $(this).swipe(options) });
     return this;
-	}
+  }
 
   // Check and set options.
   var minspeed = (options && options['minspeed']) ? options['minspeed'] : 500.0;
@@ -87,11 +97,17 @@ jQuery.fn.swipe = function (options) {
     return;
   }
   
+  // Alternative 'this' object.
+  var t = this;
+  
   // Start state machine.
   var state = 'idle';
   
   // The index of the currently 'active' item.
   var currentItemIndex = 0;
+  
+  // The index of the item that was active when the user started moving the viewport.
+  var startCurrentItemIndex = 0;
   
   // The X position of the mouse when the user first clicks (starting the swipe).
   var startX = 0;
@@ -120,6 +136,7 @@ jQuery.fn.swipe = function (options) {
   // Move to another item.
   this.move = function(offset, toggle) {
     switch (state) {
+      case 'moving':
       case 'idle':
         // Set new currentItemIndex.
         currentItemIndex += offset;
@@ -137,6 +154,8 @@ jQuery.fn.swipe = function (options) {
           }
         }
         
+        $(this).trigger('moveitem', [items.get(currentItemIndex), currentItemIndex]);
+        
         // Start moving.
         startMoving();
       
@@ -147,12 +166,41 @@ jQuery.fn.swipe = function (options) {
     }
   }
 
+  // Move to a specified item.
+  this.moveTo = function(index) {
+    switch (state) {
+      case 'moving':
+      case 'idle':
+        // Set new currentItemIndex.
+        currentItemIndex = index;
+        
+        if (currentItemIndex < 0) {
+          currentItemIndex = 0;
+        } else if (currentItemIndex >= items.length) {
+          currentItemIndex = items.length - 1;
+        }
+
+        $(this).trigger('moveitem', [items.get(currentItemIndex), currentItemIndex]);
+        
+        // Start moving.
+        startMoving();
+      
+        break;
+      default:
+        // Ignore.
+        break;
+    }
+  }
+  
   // Mousedown event.
   $(this).bind((debug ? 'mousedown' : 'touchstart'), function(e) {
     switch (state) {
       case 'moving':
       case 'idle':
         state = 'swiping';
+        
+        startCurrentItemIndex = currentItemIndex;
+        
         startX = (debug ? e.clientX : e.originalEvent.touches[0].clientX);
         currentX = startX;
 
@@ -197,9 +245,17 @@ jQuery.fn.swipe = function (options) {
         
         // Show new position.
         if (swipeThresholdPassed || (Math.abs(startX - currentX) > swipeThreshold)) {
-          var newX = $(items.get(currentItemIndex)).position().left - (currentX - startX);
+          var newX = $(items.get(startCurrentItemIndex)).position().left - (currentX - startX);
           $(container).css('left', -newX + 'px');
           swipeThresholdPassed = true;
+          
+          // If the user moves to another item manually, update the currentItemIndex.
+          while ((currentItemIndex < items.length - 1) && $(items.get(currentItemIndex + 1)).position().left <= newX) {
+            currentItemIndex++;
+          }
+          while ((currentItemIndex > 0) && $(items.get(currentItemIndex - 1)).position().left > newX) {
+            currentItemIndex--;
+          }
         }
         
         // Prevent the default 'dragging'.
@@ -234,6 +290,8 @@ jQuery.fn.swipe = function (options) {
           }
         }
         
+        $(t).trigger('moveitem', [items.get(currentItemIndex), currentItemIndex]);
+        
         startMoving();
         
         break;
@@ -255,7 +313,6 @@ jQuery.fn.swipe = function (options) {
   }
   
   // Moving timeout event.
-  var t = this;
   var movingTimeout = function() {
     switch (state) {
       case 'moving':
