@@ -306,6 +306,18 @@ jQuery.fn.swipe = function (options) {
     // Get current left position.
     var matches = /^(\-?[\d\.]+)px$/.exec($(container).css('left'));
     currentContainerX = (matches ? -parseInt(matches[1]) : 0);
+
+    if ($.browser.msie && parseInt($.browser.version, 10) <= 7) {
+      // IE7 absolute positioning weirdness bugfix.
+      $(container).css('display', 'none');
+      setTimeout(function() {
+        $(container).css('display', 'block');
+        // Start moving.
+        state = 'moving';
+        movingTimeout();
+      }, 0);
+      return;
+    }      
     
     // Start moving.
     state = 'moving';
@@ -327,7 +339,9 @@ jQuery.fn.swipe = function (options) {
           currentContainerX = targetLeft;
         }
         
-        $(container).css('left', (-Math.round(currentContainerX)) + 'px');
+        var newLeft = -Math.round(currentContainerX);
+        $(container).css('left', newLeft + 'px');
+
         if (!complete) {
           setTimeout(function() {movingTimeout();}, 10);
         } else {
